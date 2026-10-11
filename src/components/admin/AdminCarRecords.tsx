@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { CarRecord, AdminTab } from '../../types';
 import { formatCurrency } from '../../utils/currency';
+import { AdminInventoryTable } from './AdminInventoryTable';
 
 interface AdminCarRecordsProps {
   cars: CarRecord[];
@@ -48,6 +49,9 @@ export const AdminCarRecords: React.FC<AdminCarRecordsProps> = ({
   searchQuery,
   onSearchChange,
 }) => {
+  // View mode: standard records list or MongoDB date-based fleet inventory table
+  const [viewMode, setViewMode] = useState<'records' | 'inventory'>('records');
+
   // Filter states
   const [selectedBrand, setSelectedBrand] = useState<string>('All');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -312,13 +316,41 @@ export const AdminCarRecords: React.FC<AdminCarRecordsProps> = ({
         </div>
       </div>
 
-      {/* Status Quick Filter Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+      {/* View Mode Toggle: All Records vs. MongoDB Date-Based Availability */}
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
         <button
-          onClick={() => {
-            setSelectedStatus('All');
-            setCurrentPage(1);
-          }}
+          onClick={() => setViewMode('records')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            viewMode === 'records'
+              ? 'bg-[#0051d5] text-white shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          Individual Car Records ({cars.length})
+        </button>
+        <button
+          onClick={() => setViewMode('inventory')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            viewMode === 'inventory'
+              ? 'bg-[#0051d5] text-white shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          MongoDB Fleet Inventory &amp; Date Availability Table
+        </button>
+      </div>
+
+      {viewMode === 'inventory' ? (
+        <AdminInventoryTable />
+      ) : (
+        <>
+          {/* Status Quick Filter Tabs */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+            <button
+              onClick={() => {
+                setSelectedStatus('All');
+                setCurrentPage(1);
+              }}
           className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold transition-all shrink-0 cursor-pointer ${
             selectedStatus === 'All'
               ? 'bg-[#0051d5] text-white shadow-xs'
@@ -964,6 +996,8 @@ export const AdminCarRecords: React.FC<AdminCarRecordsProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </>
+  )}
+</div>
   );
 };

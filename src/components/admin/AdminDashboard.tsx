@@ -17,10 +17,18 @@ import {
   Trash2,
   Download,
   RotateCcw,
-  Sparkles
+  Sparkles,
+  Percent,
+  Users,
+  Ticket,
+  History,
+  Calendar,
+  CreditCard,
+  ShieldAlert
 } from 'lucide-react';
 import { CarRecord, AdminStats, AdminActivityLog, AdminTab } from '../../types';
 import { formatCurrency } from '../../utils/currency';
+import { AdminInventoryTable } from './AdminInventoryTable';
 
 interface AdminDashboardProps {
   stats: AdminStats;
@@ -228,7 +236,67 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       </div>
 
-      {/* 2. Middle Section: Category Inventory & Status Distribution */}
+      {/* 2. Operations & Taxation Hub Navigation Tiles */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <button
+          onClick={() => onSelectTab('analytics')}
+          className="p-3.5 rounded-2xl bg-slate-900 text-left border border-slate-800 hover:border-emerald-500/50 hover:bg-slate-850 transition-all group cursor-pointer shadow-xs"
+        >
+          <TrendingUp className="w-4 h-4 text-emerald-400 mb-2 group-hover:scale-110 transition-transform" />
+          <div className="text-xs font-bold text-white leading-tight">Profit & Analytics</div>
+          <div className="text-[10px] text-slate-400 mt-0.5">2024–2035 Models</div>
+        </button>
+
+        <button
+          onClick={() => onSelectTab('tax-settings')}
+          className="p-3.5 rounded-2xl bg-slate-900 text-left border border-slate-800 hover:border-blue-500/50 hover:bg-slate-850 transition-all group cursor-pointer shadow-xs"
+        >
+          <Percent className="w-4 h-4 text-blue-400 mb-2 group-hover:scale-110 transition-transform" />
+          <div className="text-xs font-bold text-white leading-tight">GST & Tax Settings</div>
+          <div className="text-[10px] text-slate-400 mt-0.5">Rates & Categories</div>
+        </button>
+
+        <button
+          onClick={() => onSelectTab('customers-bookings')}
+          className="p-3.5 rounded-2xl bg-slate-900 text-left border border-slate-800 hover:border-indigo-500/50 hover:bg-slate-850 transition-all group cursor-pointer shadow-xs"
+        >
+          <Users className="w-4 h-4 text-indigo-400 mb-2 group-hover:scale-110 transition-transform" />
+          <div className="text-xs font-bold text-white leading-tight">All Bookings</div>
+          <div className="text-[10px] text-slate-400 mt-0.5">Customer KYC & Pricing</div>
+        </button>
+
+        <button
+          onClick={() => onSelectTab('inventory')}
+          className="p-3.5 rounded-2xl bg-slate-900 text-left border border-slate-800 hover:border-amber-500/50 hover:bg-slate-850 transition-all group cursor-pointer shadow-xs"
+        >
+          <Layers className="w-4 h-4 text-amber-400 mb-2 group-hover:scale-110 transition-transform" />
+          <div className="text-xs font-bold text-white leading-tight">Fleet Availability</div>
+          <div className="text-[10px] text-slate-400 mt-0.5">Date-Specific Units</div>
+        </button>
+
+        <button
+          onClick={() => onSelectTab('vouchers')}
+          className="p-3.5 rounded-2xl bg-slate-900 text-left border border-slate-800 hover:border-cyan-500/50 hover:bg-slate-850 transition-all group cursor-pointer shadow-xs"
+        >
+          <Ticket className="w-4 h-4 text-cyan-400 mb-2 group-hover:scale-110 transition-transform" />
+          <div className="text-xs font-bold text-white leading-tight">Generated Vouchers</div>
+          <div className="text-[10px] text-slate-400 mt-0.5">Isolated Print & PDF</div>
+        </button>
+
+        <button
+          onClick={() => onSelectTab('audit-logs')}
+          className="p-3.5 rounded-2xl bg-slate-900 text-left border border-slate-800 hover:border-purple-500/50 hover:bg-slate-850 transition-all group cursor-pointer shadow-xs"
+        >
+          <History className="w-4 h-4 text-purple-400 mb-2 group-hover:scale-110 transition-transform" />
+          <div className="text-xs font-bold text-white leading-tight">Audit Trail</div>
+          <div className="text-[10px] text-slate-400 mt-0.5">MongoDB Logs</div>
+        </button>
+      </div>
+
+      {/* 3. Real-Time MongoDB-Powered Inventory Table (Section 6 E) */}
+      <AdminInventoryTable />
+
+      {/* 3. Middle Section: Category Inventory & Status Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Category Breakdown (2 Cols) */}
         <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">

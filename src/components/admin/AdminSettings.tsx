@@ -43,7 +43,8 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ onResetSeedData })
       const res = await fetch('/api/health');
       if (res.ok) {
         const data = await res.json();
-        setApiPingStatus(`Healthy: Connected to port 3000 (${data.totalCars} records in memory)`);
+        const service = data.data?.service || data.service || 'Java Spring Boot Backend';
+        setApiPingStatus(`Healthy: Connected to ${service} (Port 8085)`);
       } else {
         setApiPingStatus('API responded with error code ' + res.status);
       }

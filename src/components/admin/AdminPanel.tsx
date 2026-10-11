@@ -12,6 +12,15 @@ import { AdminSettings } from './AdminSettings';
 import { AdminDeleteModal } from './AdminDeleteModal';
 import { AdminEditModal } from './AdminEditModal';
 import { AdminViewModal } from './AdminViewModal';
+import { AdminTaxSettings } from './AdminTaxSettings';
+import { AdminAnalytics } from './AdminAnalytics';
+import { AdminCustomersBookings } from './AdminCustomersBookings';
+import { AdminFleetInventory } from './AdminFleetInventory';
+import { AdminBookingSchedules } from './AdminBookingSchedules';
+import { AdminPolicies } from './AdminPolicies';
+import { AdminVouchers } from './AdminVouchers';
+import { AdminPayments } from './AdminPayments';
+import { AdminAuditLogs } from './AdminAuditLogs';
 import { CheckCircle2, AlertCircle, RotateCcw, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 interface ErrorBoundaryProps {
@@ -84,6 +93,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   // Navigation state
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
+  const [selectedVoucherRef, setSelectedVoucherRef] = useState<string>('');
 
   // Initialize with seed data immediately so UI never renders blank
   const [cars, setCars] = useState<CarRecord[]>(() => {
@@ -422,7 +432,62 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               />
             )}
 
-            {/* 2. Cars Visual Grid Tab */}
+            {/* 2. Customers & Bookings Tab (Req 2 & Req 11) */}
+            {activeTab === 'customers-bookings' && (
+              <AdminCustomersBookings
+                onSelectTab={setActiveTab}
+                onOpenVoucher={(ref) => {
+                  setSelectedVoucherRef(ref);
+                  setActiveTab('vouchers');
+                }}
+              />
+            )}
+
+            {/* 3. Fleet Inventory & Date-Specific Availability Tab (Req 3) */}
+            {activeTab === 'inventory' && (
+              <AdminFleetInventory />
+            )}
+
+            {/* 4. Booking History & Rental Schedules Tab (Req 6) */}
+            {activeTab === 'schedules' && (
+              <AdminBookingSchedules
+                onInspectBooking={() => {
+                  setActiveTab('customers-bookings');
+                }}
+              />
+            )}
+
+            {/* 5. Profit & Financial Analytics Tab (Req 4 & Req 5) */}
+            {activeTab === 'analytics' && (
+              <AdminAnalytics />
+            )}
+
+            {/* 6. GST & Tax Settings Tab (Req 1) */}
+            {activeTab === 'tax-settings' && (
+              <AdminTaxSettings />
+            )}
+
+            {/* 7. Cancellation Policies & Surcharges Tab (Req 7) */}
+            {activeTab === 'policies' && (
+              <AdminPolicies />
+            )}
+
+            {/* 8. Generated Vouchers Tab (Req 8) */}
+            {activeTab === 'vouchers' && (
+              <AdminVouchers initialBookingRef={selectedVoucherRef} />
+            )}
+
+            {/* 9. Payment Records Tab (Req 9) */}
+            {activeTab === 'payments' && (
+              <AdminPayments />
+            )}
+
+            {/* 10. Audit Logs Tab (Req 10) */}
+            {activeTab === 'audit-logs' && (
+              <AdminAuditLogs />
+            )}
+
+            {/* 11. Cars Visual Grid Tab */}
             {activeTab === 'cars' && (
               <AdminCarGrid
                 cars={cars}
@@ -436,7 +501,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               />
             )}
 
-            {/* 3. Add Car Tab */}
+            {/* 12. Add Car Tab */}
             {activeTab === 'add-car' && (
               <AdminAddCar
                 onSaveCar={handleSaveCar}
@@ -445,7 +510,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               />
             )}
 
-            {/* 4. Car Records Table Tab */}
+            {/* 13. Car Records Table Tab */}
             {activeTab === 'records' && (
               <AdminCarRecords
                 cars={cars}
@@ -460,7 +525,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               />
             )}
 
-            {/* 5. Settings Tab */}
+            {/* 14. Settings Tab */}
             {activeTab === 'settings' && (
               <AdminSettings onResetSeedData={handleResetSeedData} />
             )}

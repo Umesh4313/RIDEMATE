@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Booking } from '../types';
 import { formatCurrency } from '../utils/currency';
+import { VoucherModal } from './VoucherModal';
 import { 
   Calendar, 
   History, 
@@ -16,7 +17,12 @@ import {
   Upload,
   ArrowRight,
   Shield,
-  Download
+  Download,
+  Printer,
+  Tag,
+  Sparkles,
+  Gift,
+  Percent
 } from 'lucide-react';
 
 interface MyBookingsScreenProps {
@@ -34,7 +40,41 @@ export const MyBookingsScreen: React.FC<MyBookingsScreenProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past' | 'profile' | 'documents'>('upcoming');
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null);
   const [cancelingBookingId, setCancelingBookingId] = useState<string | null>(null);
+  const [voucherModalBooking, setVoucherModalBooking] = useState<Booking | null>(null);
+  const [loyalty, setLoyalty] = useState<{
+    customerEmail: string;
+    customerName: string;
+    totalBookings: number;
+    totalSpent: number;
+    loyaltyTier: string;
+    loyaltyPoints: number;
+    defaultDiscountPercent: number;
+    recommendedCouponCode: string;
+    tierBadgeTitle: string;
+  } | null>(null);
+
+  useEffect(() => {
+    async function loadLoyalty() {
+      try {
+        const userEmail = bookings.length > 0 ? bookings[0].customerEmail : 'ganesh@ridemate.io';
+        let res = await fetch(`/api/v1/loyalty/status?customerEmail=${encodeURIComponent(userEmail)}`);
+        if (!res.ok) {
+          res = await fetch(`http://localhost:8085/api/v1/loyalty/status?customerEmail=${encodeURIComponent(userEmail)}`);
+        }
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data) {
+            setLoyalty(json.data);
+          }
+        }
+      } catch (err) {
+        console.warn('Loyalty fetch fallback', err);
+      }
+    }
+    loadLoyalty();
+  }, [bookings]);
 
   // Filter bookings
   const upcomingBookings = bookings.filter((b) => b.status === 'Confirmed' || b.status === 'Active');
@@ -57,7 +97,73 @@ export const MyBookingsScreen: React.FC<MyBookingsScreenProps> = ({
             Manage your active trips, digital pickup keys, and verification credentials.
           </p>
         </div>
+
+        {/* MongoDB Loyalty Tier Badge */}
+        {loyalty && (
+          <div className="bg-gradient-to-r from-[#0b1c30] to-[#0051d5] text-white p-3 px-4 rounded-2xl shadow-sm flex items-center gap-3">
+            <div className="p-2 bg-white/10 rounded-xl">
+              <Sparkles className="w-5 h-5 text-amber-300" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-300">
+                  {loyalty.tierBadgeTitle}
+                </span>
+                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-semibold border border-emerald-400/30">
+                  MongoDB Synced
+                </span>
+              </div>
+              <p className="text-xs text-[#bec6e0]">
+                {loyalty.loyaltyPoints} Pts &bull; {loyalty.totalBookings} Completed Rentals &bull; Qualifies for {loyalty.defaultDiscountPercent}% OFF
+              </p>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Recommended Discount Coupon Banner */}
+      {loyalty && loyalty.recommendedCouponCode && (
+        <div className="bg-gradient-to-r from-emerald-500/10 via-[#eff4ff] to-emerald-500/5 border border-emerald-300/80 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-emerald-600 text-white rounded-xl shadow-xs">
+              <Gift className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-[#0b1c30] flex items-center gap-2">
+                <span>{loyalty.totalBookings === 0 ? 'Welcome 1st-Time Customer Special' : 'Exclusive Loyalty Member Reward'}</span>
+                <span className="text-xs font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full">
+                  {loyalty.defaultDiscountPercent}% DISCOUNT
+                </span>
+              </h3>
+              <p className="text-xs text-[#45464d] mt-0.5">
+                {loyalty.totalBookings === 0 
+                  ? 'Get 10% off your very first rental with code FIRST10 at checkout.' 
+                  : `As our valued regular member, use code ${loyalty.recommendedCouponCode} for ${loyalty.defaultDiscountPercent}% discount on your next ride.`}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="bg-white border border-emerald-400 font-mono font-bold text-xs text-emerald-800 px-3 py-1.5 rounded-xl shadow-2xs">
+              {loyalty.recommendedCouponCode}
+            </div>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(loyalty.recommendedCouponCode);
+                setCopiedCoupon(loyalty.recommendedCouponCode);
+                setTimeout(() => setCopiedCoupon(null), 2000);
+              }}
+              className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              {copiedCoupon === loyalty.recommendedCouponCode ? (
+                <><Check className="w-3.5 h-3.5" /><span>Copied!</span></>
+              ) : (
+                <><Copy className="w-3.5 h-3.5" /><span>Copy Code</span></>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Navigation Sidebar (matching Screen 4) */}
@@ -233,6 +339,14 @@ export const MyBookingsScreen: React.FC<MyBookingsScreenProps> = ({
                         </div>
                       </div>
 
+                      {/* Coupon Discount Pill if applied */}
+                      {booking.couponCode && (
+                        <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200/80 text-emerald-800 px-3 py-2 rounded-xl text-xs font-semibold">
+                          <Tag className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Promo Coupon Applied: <strong>{booking.couponCode}</strong> ({booking.discountPercent || 0}% OFF &bull; Saved {formatCurrency(booking.discountAmount || 0, { decimals: 2 })})</span>
+                        </div>
+                      )}
+
                       {/* Pickup Code Box & Actions (exact matching Screen 4) */}
                       <div className="bg-[#eff4ff]/70 p-4 rounded-xl border border-[#c6c6cd]/40 flex flex-col sm:flex-row justify-between items-center gap-4">
                         <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -258,17 +372,25 @@ export const MyBookingsScreen: React.FC<MyBookingsScreenProps> = ({
                           </button>
                         </div>
 
-                        {/* Modify & Cancel Buttons */}
-                        <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                        {/* Print Voucher, Modify & Cancel Buttons */}
+                        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                          <button
+                            onClick={() => setVoucherModalBooking(booking)}
+                            className="px-3.5 py-2 border border-[#0051d5]/30 bg-[#eff4ff] hover:bg-[#0051d5] text-[#0051d5] hover:text-white rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
+                            title="Print Booking Voucher"
+                          >
+                            <Printer className="w-3.5 h-3.5" />
+                            <span>Print Voucher</span>
+                          </button>
                           <button
                             onClick={() => onModifyBooking(booking)}
-                            className="px-4 py-2 border border-[#c6c6cd] bg-white hover:bg-[#eff4ff] text-[#0b1c30] rounded-lg text-xs font-semibold transition-colors"
+                            className="px-3 py-2 border border-[#c6c6cd] bg-white hover:bg-[#eff4ff] text-[#0b1c30] rounded-lg text-xs font-semibold transition-colors"
                           >
                             Modify
                           </button>
                           <button
                             onClick={() => setCancelingBookingId(booking.id)}
-                            className="px-4 py-2 border border-[#ffdad6] bg-white hover:bg-[#ffdad6]/30 text-[#ba1a1a] rounded-lg text-xs font-semibold transition-colors"
+                            className="px-3 py-2 border border-[#ffdad6] bg-white hover:bg-[#ffdad6]/30 text-[#ba1a1a] rounded-lg text-xs font-semibold transition-colors"
                           >
                             Cancel
                           </button>
@@ -360,9 +482,9 @@ export const MyBookingsScreen: React.FC<MyBookingsScreenProps> = ({
                         {b.status}
                       </span>
                       <button
-                        onClick={() => alert(`Receipt downloaded for ${b.pickupCode}`)}
-                        className="p-2 rounded-lg border border-[#c6c6cd]/60 hover:bg-[#eff4ff] text-[#0051d5]"
-                        title="Download Invoice Receipt"
+                        onClick={() => setVoucherModalBooking(b)}
+                        className="p-2 rounded-lg border border-[#c6c6cd]/60 hover:bg-[#eff4ff] text-[#0051d5] cursor-pointer"
+                        title="Download Invoice / Print Voucher"
                       >
                         <Download className="w-4 h-4" />
                       </button>
@@ -496,6 +618,16 @@ export const MyBookingsScreen: React.FC<MyBookingsScreenProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Official Voucher Print / Download Modal */}
+      {voucherModalBooking && (
+        <VoucherModal
+          booking={voucherModalBooking}
+          isOpen={!!voucherModalBooking}
+          onClose={() => setVoucherModalBooking(null)}
+          autoPrint={true}
+        />
       )}
     </div>
   );

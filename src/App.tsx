@@ -43,6 +43,7 @@ export default function App() {
   // User & Authentication state
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [userName, setUserName] = useState('Ganesh J.');
+  const [userEmail, setUserEmail] = useState('ganesh@ridemate.io');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup' | 'forgot-password'>('login');
 
@@ -60,8 +61,9 @@ export default function App() {
     setIsAuthModalOpen(true);
   };
 
-  const handleAuthSuccess = (name: string, _email: string) => {
+  const handleAuthSuccess = (name: string, email: string) => {
     setUserName(name || 'Member');
+    setUserEmail(email || 'ganesh@ridemate.io');
     setIsLoggedIn(true);
     setIsAuthModalOpen(false);
     showToast(`Welcome back, ${name || 'Member'}!`);
@@ -241,6 +243,8 @@ export default function App() {
           searchState={searchState}
           rentalDays={checkoutDays}
           initialPlan={checkoutPlan}
+          customerEmail={userEmail}
+          customerName={userName}
           onClose={() => setCheckoutModalOpen(false)}
           onBookingConfirmed={handleBookingConfirmed}
         />

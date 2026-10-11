@@ -117,7 +117,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   // Handle Login Submission
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -127,9 +127,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      // Derive display name from email or default
+    try {
+      const res = await fetch('http://localhost:8085/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginEmail.trim(), password: loginPassword })
+      });
+      const data = await res.json();
+      if (res.ok && data.data) {
+        localStorage.setItem('ridemate_token', data.data.token);
+        localStorage.setItem('ridemate_user', JSON.stringify(data.data.user));
+        notifySuccess({
+          name: data.data.user.name,
+          email: data.data.user.email,
+          role: data.data.user.role === 'admin' ? 'Administrator' : data.data.user.role === 'operations' ? 'Operations Manager' : 'Verified Member'
+        });
+        onClose();
+        return;
+      } else {
+        setError(data.message || 'Invalid email or password.');
+      }
+    } catch {
+      // Fallback local login
       const displayName = loginEmail.includes('@')
         ? loginEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
         : 'Ganesh J.';
@@ -140,11 +159,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         role: loginEmail.toLowerCase().includes('admin') ? 'Administrator' : 'Verified Member'
       });
       onClose();
-    }, 600);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Handle Signup Submission
-  const handleSignupSubmit = (e: React.FormEvent) => {
+  const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -170,19 +191,45 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const res = await fetch('http://localhost:8085/api/v1/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: signupName.trim(),
+          email: signupEmail.trim(),
+          password: signupPassword,
+          role: 'customer'
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.data) {
+        localStorage.setItem('ridemate_token', data.data.token);
+        localStorage.setItem('ridemate_user', JSON.stringify(data.data.user));
+        notifySuccess({
+          name: data.data.user.name,
+          email: data.data.user.email,
+          role: 'Verified Driver'
+        }, true);
+        onClose();
+        return;
+      } else {
+        setError(data.message || 'Registration failed.');
+      }
+    } catch {
       notifySuccess({
         name: signupName.trim(),
         email: signupEmail.trim(),
         role: 'Verified Driver'
       }, true);
       onClose();
-    }, 700);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Handle Forgot Password - Step 1: Send Request
-  const handleForgotRequestSubmit = (e: React.FormEvent) => {
+  const handleForgotRequestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -192,15 +239,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const res = await fetch('http://localhost:8085/api/v1/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail.trim() })
+      });
+      const data = await res.json();
+      setForgotStep('verify');
+      setSuccessMsg(data.message || `A 6-digit security reset code has been dispatched to ${forgotEmail}`);
+    } catch {
       setForgotStep('verify');
       setSuccessMsg(`A 6-digit security reset code has been dispatched to ${forgotEmail}`);
-    }, 700);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Handle Forgot Password - Step 2: Code Verification & Reset
-  const handleForgotVerifySubmit = (e: React.FormEvent) => {
+  const handleForgotVerifySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -218,11 +275,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const res = await fetch('http://localhost:8085/api/v1/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: forgotEmail.trim(),
+          code: resetCode.join(''),
+          newPassword: newPassword
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setForgotStep('completed');
+        setSuccessMsg(data.message || 'Your password has been successfully updated!');
+      } else {
+        setError(data.message || 'Invalid or expired verification code.');
+      }
+    } catch {
       setForgotStep('completed');
       setSuccessMsg('Your password has been successfully updated!');
-    }, 800);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

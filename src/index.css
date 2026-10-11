@@ -1,1 +1,96 @@
 @import "tailwindcss";
+
+/* =========================================================
+   PRINT STYLES FOR OFFICIAL RENTAL VOUCHER & BOARDING PASS
+   Strict isolation: only the selected booking voucher prints!
+   ========================================================= */
+@media print {
+  /* Strictly hide the entire React root and page chrome: My Bookings page,
+     navbar, sidebar, other booking cards, and footer are completely excluded */
+  #root,
+  nav,
+  footer,
+  header,
+  aside,
+  .no-print,
+  button,
+  input,
+  [role="dialog"] > div.no-print {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 11pt !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Mount point for isolated voucher modal */
+  #isolated-voucher-portal {
+    display: block !important;
+    visibility: visible !important;
+    position: static !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  #isolated-voucher-portal .voucher-modal-overlay {
+    position: static !important;
+    display: block !important;
+    background: transparent !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    backdrop-filter: none !important;
+  }
+
+  #isolated-voucher-portal .voucher-modal-dialog {
+    max-width: 100% !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+    max-height: none !important;
+    background: #ffffff !important;
+  }
+
+  /* Dedicated voucher document */
+  #printable-voucher {
+    display: block !important;
+    visibility: visible !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: #ffffff !important;
+    overflow: visible !important;
+  }
+
+  #printable-voucher * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Prevent awkward page splits inside sections */
+  .voucher-section,
+  .voucher-price-breakdown,
+  tr,
+  .avoid-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm;
+  }
+}

@@ -39,6 +39,37 @@ export const SearchResultsScreen: React.FC<SearchResultsScreenProps> = ({
   });
 
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [availabilityMap, setAvailabilityMap] = useState<Record<string, { available: number; total: number }>>({});
+
+  // Real-time date-based availability synchronization from MongoDB
+  React.useEffect(() => {
+    const fetchLiveAvailability = async () => {
+      try {
+        const pDate = searchState.pickupDate || new Date().toISOString().split('T')[0];
+        const rDate = searchState.returnDate || new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0];
+        let res = await fetch(`/api/v1/inventory/availability?pickupDate=${pDate}&dropoffDate=${rDate}`);
+        if (!res.ok) {
+          res = await fetch(`http://localhost:8085/api/v1/inventory/availability?pickupDate=${pDate}&dropoffDate=${rDate}`);
+        }
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data && Array.isArray(json.data)) {
+            const map: Record<string, { available: number; total: number }> = {};
+            json.data.forEach((item: any) => {
+              map[item.carId] = { available: item.availableQuantity, total: item.totalFleetQuantity };
+              if (item.modelName) {
+                map[item.modelName.toLowerCase()] = { available: item.availableQuantity, total: item.totalFleetQuantity };
+              }
+            });
+            setAvailabilityMap(map);
+          }
+        }
+      } catch {
+        // Safe fallback
+      }
+    };
+    fetchLiveAvailability();
+  }, [searchState.pickupDate, searchState.returnDate]);
 
   // Toggle Type filter
   const toggleType = (type: string) => {
@@ -346,6 +377,7 @@ export const SearchResultsScreen: React.FC<SearchResultsScreenProps> = ({
             <div className="space-y-6">
               {filteredVehicles.map((vehicle) => {
                 const totalEstimated = vehicle.pricePerDay * rentalDays;
+                const availInfo = availabilityMap[vehicle.id] || availabilityMap[vehicle.name.toLowerCase()] || { available: 4, total: 5 };
 
                 return (
                   <div
@@ -359,9 +391,22 @@ export const SearchResultsScreen: React.FC<SearchResultsScreenProps> = ({
                         alt={vehicle.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
-                      <div className="absolute top-4 left-4 px-2.5 py-1 bg-white/90 backdrop-blur-md rounded-full text-xs font-semibold text-[#0c9488] border border-[#0c9488]/30 flex items-center gap-1 shadow-sm">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Available</span>
+                      <div className={`absolute top-4 left-4 px-2.5 py-1 backdrop-blur-md rounded-full text-xs font-semibold border flex items-center gap-1 shadow-sm ${
+                        availInfo.available > 0
+                          ? 'bg-white/95 text-[#0c9488] border-[#0c9488]/30'
+                          : 'bg-rose-50/95 text-rose-700 border-rose-300'
+                      }`}>
+                        {availInfo.available > 0 ? (
+                          <>
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>{availInfo.available} of {availInfo.total} Available</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="w-2 h-2 rounded-full bg-rose-500" />
+                            <span>Fully Booked for Dates</span>
+                          </>
+                        )}
                       </div>
                       {vehicle.fuelType === 'Electric' && (
                         <div className="absolute top-4 right-4 px-2.5 py-1 bg-white/90 backdrop-blur-md text-[#0051d5] rounded-full text-xs font-semibold flex items-center gap-1 shadow-sm border border-[#0051d5]/20">

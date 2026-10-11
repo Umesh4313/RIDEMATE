@@ -1,5 +1,19 @@
 export type ScreenType = 'home' | 'search' | 'details' | 'bookings' | 'ops' | 'admin';
-export type AdminTab = 'dashboard' | 'cars' | 'add-car' | 'records' | 'settings';
+export type AdminTab =
+  | 'dashboard'
+  | 'customers-bookings'
+  | 'inventory'
+  | 'schedules'
+  | 'analytics'
+  | 'tax-settings'
+  | 'policies'
+  | 'vouchers'
+  | 'payments'
+  | 'audit-logs'
+  | 'cars'
+  | 'add-car'
+  | 'records'
+  | 'settings';
 
 export interface CarRecord {
   id: string;
@@ -131,6 +145,12 @@ export interface Booking {
   protectionPlan: 'basic' | 'standard' | 'premium';
   protectionFee: number;
   totalDue: number;
+  couponCode?: string;
+  discountAmount?: number;
+  discountPercent?: number;
+  taxableAmount?: number;
+  gstRate?: number;
+  gstAmount?: number;
   status: 'Confirmed' | 'Active' | 'Completed' | 'Cancelled';
   customerName: string;
   customerEmail: string;
@@ -138,6 +158,47 @@ export interface Booking {
   driverLicenseNumber: string;
   paymentMethodLast4: string;
   createdAt: string;
+}
+
+export interface CouponValidationResult {
+  valid: boolean;
+  code: string;
+  title: string | null;
+  description: string | null;
+  discountPercent: number;
+  discountAmount: number;
+  baseRentalPrice?: number;
+  taxableAmount?: number;
+  gstRate?: number;
+  gstAmount?: number;
+  finalPayableAmount?: number;
+  originalTotal: number;
+  discountedTotal: number;
+  message: string;
+  applicableUserType: string | null;
+  qualifyingBookingCount?: number;
+  isExistingCustomer?: boolean;
+}
+
+export interface AvailableCoupon {
+  code: string;
+  title: string;
+  description: string;
+  discountPercent: number;
+  applicableUserType: string;
+  minRentalDays: number;
+  recommended: boolean;
+}
+
+export interface CustomerLoyaltyInfo {
+  customerEmail: string;
+  customerName: string;
+  loyaltyTier: string;
+  loyaltyPoints: number;
+  totalBookings: number;
+  totalSpent: number;
+  qualifiedDiscountPercent: number;
+  tierBadgeColor: string;
 }
 
 export interface ActionItem {
@@ -163,3 +224,160 @@ export interface FleetVehicle {
   currentCustomer?: string;
   nextService: string;
 }
+
+// ---------------- Admin Upgrade Types ----------------
+
+export interface TaxCategoryItem {
+  code: string;
+  name: string;
+  rate: number;
+  enabled: boolean;
+  description?: string;
+}
+
+export interface TaxAuditEntry {
+  timestamp: string;
+  changedBy: string;
+  fieldName: string;
+  oldValue: string;
+  newValue: string;
+  reason?: string;
+}
+
+export interface TaxSettingsData {
+  id?: string;
+  gstRate: number;
+  cgstRate: number;
+  sgstRate: number;
+  igstRate: number;
+  cessRate: number;
+  taxCategories: TaxCategoryItem[];
+  updatedBy: string;
+  updatedAt?: string;
+  effectiveFrom?: string;
+  auditTrail?: TaxAuditEntry[];
+}
+
+export interface CancellationTierItem {
+  tierName: string;
+  minHoursBeforePickup: number;
+  maxHoursBeforePickup: number;
+  feePercentage: number;
+  description?: string;
+}
+
+export interface PolicySettingsData {
+  id?: string;
+  cancellationTiers: CancellationTierItem[];
+  lateReturnHourlyFee: number;
+  extraDaySurcharge: number;
+  securityHoldAmount: number;
+  taxApplicableOnSurcharges: boolean;
+  updatedBy: string;
+  updatedAt?: string;
+}
+
+export interface AuditLogItem {
+  id: string;
+  action: string;
+  actor: string;
+  targetType: string;
+  targetId?: string;
+  description: string;
+  details?: string;
+  previousValue?: string;
+  newValue?: string;
+  timestamp: string;
+}
+
+export interface CustomerProfileItem {
+  customerEmail: string;
+  customerName: string;
+  customerPhone?: string;
+  customerId?: string;
+  membershipTier: string;
+  loyaltyPoints: number;
+  totalBookings: number;
+  completedRentals: number;
+  upcomingRentals: number;
+  cancelledBookings: number;
+  totalSpent: number;
+  totalDiscountsReceived: number;
+  refundsReceived: number;
+  outstandingBalance: number;
+}
+
+export interface MonthlyAnalyticsStat {
+  monthIndex: number;
+  monthName: string;
+  bookingsCount: number;
+  grossRentalAmount: number;
+  discountsGranted: number;
+  rentalRevenueAfterDiscounts: number;
+  gstCollected: number;
+  refunds: number;
+  netProfit: number;
+}
+
+export interface AdminAnalyticsData {
+  year: number;
+  month?: number;
+  monthName?: string;
+  hasBookingsForPeriod: boolean;
+  totalBookings: number;
+  completedRentals: number;
+  cancelledBookings: number;
+  grossRentalAmount: number;
+  discountsGranted: number;
+  rentalRevenueAfterDiscounts: number;
+  gstCollected: number;
+  additionalChargeRevenue: number;
+  refundsIssued: number;
+  operatingExpenses: number;
+  netProfit: number;
+  isEstimatedProfit: boolean;
+  reportingTimezone: string;
+  revenueRecognitionRule: string;
+  monthlyStats: MonthlyAnalyticsStat[];
+}
+
+export interface VoucherAdminItem {
+  voucherReference: string;
+  bookingReference: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  carModel: string;
+  category?: string;
+  startDate: string;
+  endDate: string;
+  pickupLocation?: string;
+  returnLocation?: string;
+  baseRentalAmount: number;
+  discountPercentage: number;
+  discountAmount: number;
+  couponCode?: string;
+  taxableRentalAmount: number;
+  gstRate: number;
+  gstAmount: number;
+  additionalCharges: number;
+  totalPayableAmount: number;
+  voucherStatus: string;
+  issueDate: string;
+}
+
+export interface PaymentAdminItem {
+  transactionReference: string;
+  bookingReference: string;
+  customerName: string;
+  customerEmail: string;
+  amountCharged: number;
+  paymentMethod: string;
+  paymentStatus: string;
+  transactionDate: string;
+  refundAmount: number;
+  refundStatus?: string;
+  currency: string;
+  gstAmount: number;
+}
+

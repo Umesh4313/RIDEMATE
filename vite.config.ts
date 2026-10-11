@@ -4,7 +4,7 @@ import path from 'path';
 import { defineConfig } from 'vite';
 
 export default defineConfig(() => {
-  const backendPort = process.env.BACKEND_PORT || 5000;
+  const backendPort = process.env.BACKEND_PORT || 8085;
   return {
     plugins: [react(), tailwindcss()],
     resolve: {
@@ -16,7 +16,9 @@ export default defineConfig(() => {
       port: 5173,
       strictPort: false,
       hmr: process.env.DISABLE_HMR !== 'true',
-      watch: process.env.DISABLE_HMR === 'true' ? null : {},
+      watch: {
+        ignored: ['**/data/**', '**/java-backend/**', '**/.git/**', '**/node_modules/**'],
+      },
       proxy: {
         '/api': {
           target: `http://127.0.0.1:${backendPort}`,

@@ -6,3 +6,13 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Local database files
+data/
+java-backend/data/
+*.mv.db
+*.lock.db
+
+# Java build output
+java-backend/target/
+target/
